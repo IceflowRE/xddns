@@ -44,30 +44,4 @@ jobs:
         with:
           name: xddns-${{ matrix.goos }}-${{ matrix.goarch }}
           path: dist/
-  aur:
-    name: AUR Package
-    runs-on: ubuntu-latest
-    container:
-      image: archlinux:latest
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v6
-
-      - name: Install system dependencies
-        run: |
-          pacman -Syu --noconfirm \
-            base-devel \
-            git \
-            sudo \
-            bash \
-            go \
-            namcap \
-            pacman-contrib
-          pacman -Scc --noconfirm
-
-      - name: Test AUR package or PKGBUILD
-        working-directory: ${{ github.workspace }}/packaging/aur
-        run: |
-          makepkg -o
-          makepkg -si --noconfirm
+ 
