@@ -15,10 +15,10 @@ source=("${pkgname}-${pkgver}.tar.gz::${url}/archive/refs/tags/v${pkgver}.tar.gz
         "${pkgname}.service"
         "${pkgname}.sysusers"
         "${pkgname}.example.yaml")
-sha256sums=('1eeade773c485a6d58ebda652b83bae756e007946d7a8263cc2da50b466ad0d9'
+sha256sums=('2cfa4ea186dcb562e6cac4888702bcfa51cb47fe0f8f76e62fe771a6ea72848c'
             '3e8537e61d51dd4c47879444ab5275514d4da9ba172d57d7fdbba3d2e40f964f'
             '39604d099204cf6318ede27df796b93c2f542a5e50b30670a22bbeaaf2e1c2e0'
-            '98e3cc94b18c08017af8dc8c089082357f6d10dc543e86b5706ff9d5c924dc5a')
+            'f4ae82d484fd94e54627e222096f974cd0b64943b717a374c295f91cf3965722')
 
 prepare() {
     cd "${pkgname}-${pkgver}"
