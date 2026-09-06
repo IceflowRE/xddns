@@ -24,19 +24,6 @@ or
 paru -S xddns
 ```
 
-#### From source
-
-```shell
-sudo pacman -S --needed git base-devel
-git clone https://github.com/IceflowRE/xddns.git
-cd xddns/packaging/aur
-makepkg -si
-```
-
-```shell
-sudo pacman -S --needed git base-devel && git clone https://github.com/IceflowRE/xddns.git && cd xddns/packaging/aur && makepkg -si
-```
-
 ## Quick start
 
 Create `xddns.yaml` in the current directory, or use `--config /path/to/xddns.yaml` to select a file explicitly. The file must be readable and writable only by its owner:
