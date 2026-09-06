@@ -1,0 +1,42 @@
+{
+    "name": "xddns",
+    "image": "mcr.microsoft.com/devcontainers/go:1.26",
+    "customizations": {
+        "vscode": {
+            "settings": {
+                "go.lintTool": "golangci-lint",
+                "go.lintFlags": [
+                    "--path-mode=abs"
+                    //"--fast-only"
+                ],
+                "go.lintOnSave": "workspace",
+                "go.formatTool": "custom",
+                "go.alternateTools": {
+                    "customFormatter": "golangci-lint"
+                },
+                "go.formatFlags": [
+                    "fmt",
+                    "--stdin"
+                ],
+                "gopls": {
+                    "formatting.gofumpt": false
+                },
+                "files.exclude": {
+                    "**/.git": true
+                },
+                "yaml.schemas": {
+                    "https://raw.githubusercontent.com/golangci/golangci-lint/refs/heads/main/jsonschema/custom-gcl.jsonschema.json": ".custom-gcl.yaml",
+                    "https://raw.githubusercontent.com/golangci/golangci-lint/refs/heads/main/jsonschema/golangci.jsonschema.json": ".golangci.yaml",
+                    "docs/xddns.schema.json": "xddns.yaml"
+                }
+            },
+            "extensions": [
+                "github.vscode-github-actions",
+                "golang.go",
+                "ms-azuretools.vscode-containers",
+                "redhat.vscode-yaml"
+            ]
+        }
+    },
+    "postCreateCommand": "./.devcontainer/post-create.sh"
+}

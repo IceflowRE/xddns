@@ -1,0 +1,9 @@
+.vscode/
+.idea/
+/packaging/aur/pkg/
+/packaging/aur/src/
+/packaging/aur/*.tar.gz
+/packaging/aur/*.tar.zst
+
+/xddns.yaml
+/xddns.yml

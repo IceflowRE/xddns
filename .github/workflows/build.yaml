@@ -1,0 +1,73 @@
+name: Build
+
+on: [workflow_call, workflow_dispatch]
+
+permissions:
+  contents: read
+  id-token: write
+  attestations: write
+  artifact-metadata: write
+
+jobs:
+  build:
+    name: ${{ matrix.goos }}/${{ matrix.goarch }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        goos: [linux, windows, darwin]
+        goarch: [amd64, arm64]
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: "go.mod"
+      - name: Set variables
+        id: vars
+        run: |
+          # set the binary extension for Windows
+          if [ "${{ matrix.goos }}" = "windows" ]; then
+            echo "EXT=.exe" >> $GITHUB_OUTPUT
+          else
+            echo "EXT=" >> $GITHUB_OUTPUT
+          fi
+      - name: Build
+        run: |
+          mkdir dist
+          GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }} \
+          go build -v -o dist/xddns-${{ matrix.goos }}-${{ matrix.goarch }}${{ steps.vars.outputs.EXT }} ./cmd/xddns
+      - name: Attest
+        uses: actions/attest@v4
+        with:
+          subject-path: dist/*
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v6
+        with:
+          name: xddns-${{ matrix.goos }}-${{ matrix.goarch }}
+          path: dist/
+  aur:
+    name: AUR Package
+    runs-on: ubuntu-latest
+    container:
+      image: archlinux:latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Install system dependencies
+        run: |
+          pacman -Syu --noconfirm \
+            base-devel \
+            git \
+            sudo \
+            bash \
+            go \
+            namcap \
+            pacman-contrib
+          pacman -Scc --noconfirm
+
+      - name: Test AUR package or PKGBUILD
+        working-directory: ${{ github.workspace }}/packaging/aur
+        run: |
+          makepkg -o
+          makepkg -si --noconfirm

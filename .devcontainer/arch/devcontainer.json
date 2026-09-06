@@ -1,0 +1,15 @@
+{
+    "name": "xddns-aur",
+    "dockerComposeFile": "compose.yaml",
+    "service": "devcontainer",
+    "workspaceFolder": "/workspace/xddns",
+    "remoteUser": "vscode",
+    "overrideCommand": false,
+    "customizations": {
+        "vscode": {
+            "settings": {
+                "terminal.integrated.defaultProfile.linux": "bash"
+            }
+        }
+    }
+}

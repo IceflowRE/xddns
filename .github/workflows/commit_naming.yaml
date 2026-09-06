@@ -1,0 +1,11 @@
+name: Commit Naming
+on: [push, pull_request]
+
+jobs:
+  commit-naming:
+    name: Commit Naming
+    runs-on: ubuntu-slim
+    steps:
+      - uses: IceflowRE/gitcc@v3
+        with:
+          validator: simpletag

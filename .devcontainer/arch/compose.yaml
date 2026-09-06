@@ -1,0 +1,12 @@
+services:
+  devcontainer:
+    build: .
+    privileged: true
+    cgroup: host
+    tty: true
+    tmpfs:
+      - /run
+      - /run/lock
+
+    volumes:
+      - ../..:/workspace/xddns:cached

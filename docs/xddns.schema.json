@@ -1,0 +1,825 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://github.com/IceflowRE/xddns/raw/main/docs/xddns.schema.json",
+    "title": "XDDNS configuration",
+    "description": "Configuration for the XDDNS dynamic DNS client.",
+    "type": "object",
+    "unevaluatedProperties": false,
+    "properties": {
+        "log_level": {
+            "type": "string",
+            "enum": [
+                "debug",
+                "info",
+                "warn",
+                "error"
+            ],
+            "default": "info"
+        },
+        "update_interval": {
+            "type": "string",
+            "description": "Interval between automatic updates.",
+            "default": "10m"
+        },
+        "protocols": {
+            "$ref": "#/$defs/protocols"
+        },
+        "proxy": {
+            "$ref": "#/$defs/proxy"
+        },
+        "presets": {
+            "type": "object",
+            "unevaluatedProperties": false,
+            "properties": {
+                "providers": {
+                    "$ref": "#/$defs/providerPresets"
+                },
+                "resolvers": {
+                    "$ref": "#/$defs/resolverPresets"
+                },
+                "notifiers": {
+                    "$ref": "#/$defs/notifierPresets"
+                }
+            }
+        },
+        "updaters": {
+            "type": "array",
+            "items": {
+                "$ref": "#/$defs/updater"
+            }
+        }
+    },
+    "required": [
+        "updaters"
+    ],
+    "$defs": {
+        "protocols": {
+            "type": "array",
+            "description": "Protocols to use. At least one is required.",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+                "type": "string",
+                "enum": [
+                    "ipv4",
+                    "ipv6"
+                ]
+            },
+            "default": [
+                "ipv4",
+                "ipv6"
+            ]
+        },
+        "protocolAware": {
+            "properties": {
+                "protocols": {
+                    "$ref": "#/$defs/protocols"
+                }
+            }
+        },
+        "uri": {
+            "type": "string",
+            "format": "uri"
+        },
+        "stringOrStrings": {
+            "oneOf": [
+                {
+                    "type": "string"
+                },
+                {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "minItems": 1
+                }
+            ]
+        },
+        "uriOrUris": {
+            "oneOf": [
+                {
+                    "$ref": "#/$defs/uri"
+                },
+                {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "$ref": "#/$defs/uri"
+                    }
+                }
+            ]
+        },
+        "proxy": {
+            "allOf": [
+                {
+                    "$ref": "#/$defs/proxyPartial"
+                },
+                {
+                    "if": {
+                        "type": "object"
+                    },
+                    "then": {
+                        "required": [
+                            "url"
+                        ]
+                    }
+                }
+            ]
+        },
+        "proxyPartial": {
+            "unevaluatedProperties": false,
+            "description": "Proxy settings, a proxy URL, or false to disable the proxy.",
+            "oneOf": [
+                {
+                    "const": false
+                },
+                {
+                    "type": "string",
+                    "format": "uri"
+                },
+                {
+                    "type": "object",
+                    "unevaluatedProperties": false,
+                    "properties": {
+                        "url": {
+                            "type": "string",
+                            "format": "uri"
+                        },
+                        "username": {
+                            "type": "string"
+                        },
+                        "password": {
+                            "type": "string"
+                        }
+                    }
+                }
+            ]
+        },
+        "proxyAware": {
+            "properties": {
+                "proxy": {
+                    "$ref": "#/$defs/proxy"
+                }
+            }
+        },
+        "proxyAwarePartial": {
+            "properties": {
+                "proxy": {
+                    "$ref": "#/$defs/proxyPartial"
+                }
+            }
+        },
+        "useReference": {
+            "type": "string",
+            "description": "Reference to a preset defined in the matching presets section."
+        },
+        "usePreset": {
+            "properties": {
+                "use": {
+                    "$ref": "#/$defs/useReference"
+                }
+            },
+            "required": [
+                "use"
+            ]
+        },
+        "dyndns": {
+            "unevaluatedProperties": false,
+            "allOf": [
+                {
+                    "$ref": "#/$defs/dyndnsConfig"
+                },
+                {
+                    "properties": {
+                        "type": {
+                            "const": "dyndns"
+                        }
+                    },
+                    "required": [
+                        "type"
+                    ]
+                }
+            ]
+        },
+        "dyndnsConfig": {
+            "allOf": [
+                {
+                    "$ref": "#/$defs/dyndnsConfigPartial"
+                },
+                {
+                    "$ref": "#/$defs/proxyAware"
+                },
+                {
+                    "required": [
+                        "domain",
+                        "url"
+                    ]
+                }
+            ]
+        },
+        "dyndnsConfigPartial": {
+            "allOf": [
+                {
+                    "$ref": "#/$defs/protocolAware"
+                },
+                {
+                    "$ref": "#/$defs/proxyAwarePartial"
+                },
+                {
+                    "properties": {
+                        "url": {
+                            "type": "string",
+                            "format": "uri",
+                            "description": "URL of the DynDNS update endpoint."
+                        },
+                        "domain": {
+                            "$ref": "#/$defs/uriOrUris",
+                            "description": "Domain(s) to update.",
+                            "minItems": 1
+                        },
+                        "username": {
+                            "type": "string"
+                        },
+                        "password": {
+                            "type": "string"
+                        }
+                    }
+                }
+            ]
+        },
+        "ionos": {
+            "unevaluatedProperties": false,
+            "allOf": [
+                {
+                    "$ref": "#/$defs/ionosConfig"
+                },
+                {
+                    "properties": {
+                        "type": {
+                            "const": "ionos"
+                        }
+                    },
+                    "required": [
+                        "type"
+                    ]
+                }
+            ]
+        },
+        "ionosConfig": {
+            "allOf": [
+                {
+                    "$ref": "#/$defs/ionosConfigPartial"
+                },
+                {
+                    "$ref": "#/$defs/proxyAware"
+                },
+                {
+                    "required": [
+                        "public_prefix",
+                        "secret"
+                    ],
+                    "oneOf": [
+                        {
+                            "required": [
+                                "domain"
+                            ]
+                        },
+                        {
+                            "required": [
+                                "update_url"
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        "ionosConfigPartial": {
+            "allOf": [
+                {
+                    "$ref": "#/$defs/protocolAware"
+                },
+                {
+                    "$ref": "#/$defs/proxyAwarePartial"
+                },
+                {
+                    "properties": {
+                        "domain": {
+                            "$ref": "#/$defs/uriOrUris",
+                            "description": "Domain(s) to update.",
+                            "minItems": 1
+                        },
+                        "update_url": {
+                            "type": "string",
+                            "format": "uri",
+                            "description": "URL of the IONOS update endpoint."
+                        },
+                        "public_prefix": {
+                            "type": "string",
+                            "description": "Public prefix for the IONOS update endpoint."
+                        },
+                        "secret": {
+                            "type": "string",
+                            "description": "Secret for the IONOS update endpoint."
+                        }
+                    }
+                }
+            ]
+        },
+        "scaleway": {
+            "unevaluatedProperties": false,
+            "allOf": [
+                {
+                    "$ref": "#/$defs/scalewayConfig"
+                },
+                {
+                    "properties": {
+                        "type": {
+                            "const": "scaleway"
+                        }
+                    },
+                    "required": [
+                        "type"
+                    ]
+                }
+            ]
+        },
+        "scalewayConfig": {
+            "allOf": [
+                {
+                    "$ref": "#/$defs/scalewayConfigPartial"
+                },
+                {
+                    "$ref": "#/$defs/proxyAware"
+                },
+                {
+                    "required": [
+                        "domain",
+                        "project_id",
+                        "access_key",
+                        "secret_key"
+                    ]
+                }
+            ]
+        },
+        "scalewayConfigPartial": {
+            "allOf": [
+                {
+                    "$ref": "#/$defs/protocolAware"
+                },
+                {
+                    "$ref": "#/$defs/proxyAwarePartial"
+                },
+                {
+                    "properties": {
+                        "domain": {
+                            "$ref": "#/$defs/uriOrUris",
+                            "description": "Domain(s) to update.",
+                            "minItems": 1
+                        },
+                        "project_id": {
+                            "type": "string",
+                            "description": "Project ID for the Scaleway API."
+                        },
+                        "access_key": {
+                            "type": "string",
+                            "description": "Access key for the Scaleway API."
+                        },
+                        "secret_key": {
+                            "type": "string",
+                            "description": "Secret key for the Scaleway API."
+                        },
+                        "zone": {
+                            "type": "string",
+                            "description": "Zone for the given domains."
+                        },
+                        "ttl": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "default": 150
+                        }
+                    }
+                }
+            ]
+        },
+        "strato": {
+            "unevaluatedProperties": false,
+            "allOf": [
+                {
+                    "$ref": "#/$defs/stratoConfig"
+                },
+                {
+                    "properties": {
+                        "type": {
+                            "const": "strato"
+                        }
+                    },
+                    "required": [
+                        "type"
+                    ]
+                }
+            ]
+        },
+        "stratoConfig": {
+            "allOf": [
+                {
+                    "$ref": "#/$defs/stratoConfigPartial"
+                },
+                {
+                    "$ref": "#/$defs/proxyAware"
+                },
+                {
+                    "required": [
+                        "domain",
+                        "username",
+                        "password"
+                    ]
+                }
+            ]
+        },
+        "stratoConfigPartial": {
+            "allOf": [
+                {
+                    "$ref": "#/$defs/protocolAware"
+                },
+                {
+                    "$ref": "#/$defs/proxyAwarePartial"
+                },
+                {
+                    "properties": {
+                        "domain": {
+                            "$ref": "#/$defs/uriOrUris",
+                            "description": "Domain(s) to update.",
+                            "minItems": 1
+                        },
+                        "username": {
+                            "type": "string",
+                            "description": "Username of the Strato account."
+                        },
+                        "password": {
+                            "type": "string",
+                            "description": "Password of the Strato account."
+                        }
+                    }
+                }
+            ]
+        },
+        "ipService": {
+            "unevaluatedProperties": false,
+            "allOf": [
+                {
+                    "$ref": "#/$defs/ipServiceConfig"
+                },
+                {
+                    "properties": {
+                        "type": {
+                            "const": "ip_service"
+                        }
+                    },
+                    "required": [
+                        "type"
+                    ]
+                }
+            ]
+        },
+        "ipServiceConfig": {
+            "allOf": [
+                {
+                    "$ref": "#/$defs/ipServiceConfigPartial"
+                },
+                {
+                    "$ref": "#/$defs/proxyAware"
+                },
+                {
+                    "required": [
+                        "url"
+                    ]
+                }
+            ]
+        },
+        "ipServiceConfigPartial": {
+            "allOf": [
+                {
+                    "$ref": "#/$defs/protocolAware"
+                },
+                {
+                    "$ref": "#/$defs/proxyAwarePartial"
+                },
+                {
+                    "properties": {
+                        "url": {
+                            "$ref": "#/$defs/uriOrUris",
+                            "description": "URL(s) of the IP service endpoint(s).",
+                            "minItems": 1
+                        }
+                    }
+                }
+            ]
+        },
+        "netif": {
+            "unevaluatedProperties": false,
+            "allOf": [
+                {
+                    "$ref": "#/$defs/netifConfig"
+                },
+                {
+                    "properties": {
+                        "type": {
+                            "const": "netif"
+                        }
+                    },
+                    "required": [
+                        "type"
+                    ]
+                }
+            ]
+        },
+        "netifConfig": {
+            "allOf": [
+                {
+                    "$ref": "#/$defs/netifConfigPartial"
+                },
+                {
+                    "required": [
+                        "interface"
+                    ]
+                }
+            ]
+        },
+        "netifConfigPartial": {
+            "allOf": [
+                {
+                    "$ref": "#/$defs/protocolAware"
+                },
+                {
+                    "properties": {
+                        "interface": {
+                            "$ref": "#/$defs/stringOrStrings"
+                        }
+                    }
+                }
+            ]
+        },
+        "discord": {
+            "unevaluatedProperties": false,
+            "allOf": [
+                {
+                    "$ref": "#/$defs/discordConfig"
+                },
+                {
+                    "properties": {
+                        "type": {
+                            "const": "discord"
+                        }
+                    },
+                    "required": [
+                        "type"
+                    ]
+                }
+            ]
+        },
+        "discordConfig": {
+            "allOf": [
+                {
+                    "$ref": "#/$defs/discordConfigPartial"
+                },
+                {
+                    "$ref": "#/$defs/proxyAware"
+                },
+                {
+                    "oneOf": [
+                        {
+                            "required": [
+                                "url"
+                            ]
+                        },
+                        {
+                            "required": [
+                                "id",
+                                "token"
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        "discordConfigPartial": {
+            "allOf": [
+                {
+                    "$ref": "#/$defs/proxyAwarePartial"
+                },
+                {
+                    "properties": {
+                        "url": {
+                            "type": "string",
+                            "format": "uri",
+                            "description": "Webhook URL of the Discord channel."
+                        },
+                        "id": {
+                            "type": "string",
+                            "description": "ID of the webhook."
+                        },
+                        "token": {
+                            "type": "string",
+                            "description": "Token of the webhook."
+                        },
+                        "footer": {
+                            "type": "string",
+                            "description": "Footer text for the Discord message."
+                        }
+                    }
+                }
+            ]
+        },
+        "providerPresets": {
+            "type": "object",
+            "unevaluatedProperties": false,
+            "propertyNames": {
+                "type": "string",
+                "minLength": 1
+            },
+            "additionalProperties": {
+                "anyOf": [
+                    {
+                        "$ref": "#/$defs/dyndns"
+                    },
+                    {
+                        "$ref": "#/$defs/ionos"
+                    },
+                    {
+                        "$ref": "#/$defs/scaleway"
+                    },
+                    {
+                        "$ref": "#/$defs/strato"
+                    }
+                ]
+            }
+        },
+        "resolverPresets": {
+            "type": "object",
+            "unevaluatedProperties": false,
+            "propertyNames": {
+                "type": "string",
+                "minLength": 1
+            },
+            "additionalProperties": {
+                "anyOf": [
+                    {
+                        "$ref": "#/$defs/ipService"
+                    },
+                    {
+                        "$ref": "#/$defs/netif"
+                    }
+                ]
+            }
+        },
+        "notifierPresets": {
+            "type": "object",
+            "unevaluatedProperties": false,
+            "propertyNames": {
+                "type": "string",
+                "minLength": 1
+            },
+            "additionalProperties": {
+                "anyOf": [
+                    {
+                        "$ref": "#/$defs/discord"
+                    }
+                ]
+            }
+        },
+        "provider": {
+            "anyOf": [
+                {
+                    "$ref": "#/$defs/useReference"
+                },
+                {
+                    "allOf": [
+                        {
+                            "$ref": "#/$defs/usePreset"
+                        },
+                        {
+                            "anyOf": [
+                                {
+                                    "$ref": "#/$defs/dyndnsConfigPartial"
+                                },
+                                {
+                                    "$ref": "#/$defs/ionosConfigPartial"
+                                },
+                                {
+                                    "$ref": "#/$defs/scalewayConfigPartial"
+                                },
+                                {
+                                    "$ref": "#/$defs/stratoConfigPartial"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "$ref": "#/$defs/dyndns"
+                },
+                {
+                    "$ref": "#/$defs/ionos"
+                },
+                {
+                    "$ref": "#/$defs/scaleway"
+                },
+                {
+                    "$ref": "#/$defs/strato"
+                }
+            ]
+        },
+        "resolver": {
+            "anyOf": [
+                {
+                    "$ref": "#/$defs/useReference"
+                },
+                {
+                    "allOf": [
+                        {
+                            "$ref": "#/$defs/usePreset"
+                        },
+                        {
+                            "anyOf": [
+                                {
+                                    "$ref": "#/$defs/ipServiceConfigPartial"
+                                },
+                                {
+                                    "$ref": "#/$defs/netifConfigPartial"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "$ref": "#/$defs/ipService"
+                },
+                {
+                    "$ref": "#/$defs/netif"
+                }
+            ]
+        },
+        "notifier": {
+            "anyOf": [
+                {
+                    "$ref": "#/$defs/useReference"
+                },
+                {
+                    "allOf": [
+                        {
+                            "$ref": "#/$defs/usePreset"
+                        },
+                        {
+                            "anyOf": [
+                                {
+                                    "$ref": "#/$defs/discordConfigPartial"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "$ref": "#/$defs/discord"
+                }
+            ]
+        },
+        "updater": {
+            "type": "object",
+            "unevaluatedProperties": false,
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "description": "Name of the updater. Do not include sensitive information in the name.",
+                    "minLength": 1
+                },
+                "protocols": {
+                    "$ref": "#/$defs/protocols"
+                },
+                "proxy": {
+                    "$ref": "#/$defs/proxy"
+                },
+                "provider": {
+                    "$ref": "#/$defs/provider"
+                },
+                "resolvers": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "$ref": "#/$defs/resolver"
+                    }
+                },
+                "notifiers": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/notifier"
+                    }
+                }
+            },
+            "required": [
+                "name",
+                "provider",
+                "resolvers"
+            ]
+        }
+    }
+}
