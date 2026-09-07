@@ -3,6 +3,7 @@ package config
 import (
 	"errors"
 	"fmt"
+	"iter"
 
 	"github.com/iceflowre/xddns/xddns/internal"
 	"github.com/iceflowre/xddns/xddns/lib"
@@ -111,6 +112,22 @@ func (p *Protocols) IsSet(protocol string) bool {
 // Set sets the specified protocol to the given value.
 func (p *Protocols) Set(protocol string, value bool) {
 	_ = p.set(protocol, value)
+}
+
+// Seq returns a sequence of protocol strings that are set to true.
+func (p *Protocols) Seq() iter.Seq[string] {
+	return func(yield func(val string) bool) {
+		if p.IPv4 {
+			if !yield(internal.IPv4) {
+				return
+			}
+		}
+		if p.IPv6 {
+			if !yield(internal.IPv6) {
+				return
+			}
+		}
+	}
 }
 
 // Slice returns a slice of protocol strings that are set to true.

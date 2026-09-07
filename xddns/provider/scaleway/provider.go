@@ -26,6 +26,7 @@ const (
 var (
 	ErrInvalidDomain        = errors.New("invalid domain name")
 	ErrMissingRequiredField = errors.New("is required")
+	ErrNoValidRecordNames   = errors.New("no valid record names found for domains")
 )
 
 // Config configuration.
@@ -109,8 +110,10 @@ func requireField(name string, val string) []error {
 
 // Provider is a Scaleway provider.
 type Provider struct {
-	cfg    Config
-	client *scw.Client
+	cfg Config
+	api *scwdomain.API
+
+	recordNames []string
 
 	logger zerolog.Logger
 }
@@ -132,24 +135,32 @@ func New(cfg Config, logger zerolog.Logger) (sw *Provider, err error) {
 		return nil, fmt.Errorf("failed to create Scaleway client: %w", err)
 	}
 
+	recordNames := make([]string, 0, 2*len(cfg.Domain)) //nolint:mnd
+	for _, domain := range cfg.Domain {
+		recordName, err := internal.GetRecordName(domain, cfg.Zone)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get record name for domain %s: %w", domain, err)
+		}
+
+		recordNames = append(recordNames, recordName)
+	}
+
+	if len(recordNames) == 0 {
+		return nil, fmt.Errorf("%w: %v", ErrNoValidRecordNames, cfg.Domain)
+	}
+
 	return &Provider{
-		cfg:    cfg,
-		client: client,
-		logger: logger,
+		cfg:         cfg,
+		api:         scwdomain.NewAPI(client),
+		recordNames: recordNames,
+		logger:      logger,
 	}, nil
 }
 
 // Update updates the DNS records for the configured domains with the provided IPs.
 func (prov *Provider) Update(ctx context.Context, ips lib.IPs) error {
-	api := scwdomain.NewAPI(prov.client)
-
 	changes := make([]*scwdomain.RecordChange, 0, 2*len(prov.cfg.Domain)) //nolint:mnd
-	for _, domain := range prov.cfg.Domain {
-		recordName, err := internal.GetRecordName(domain, prov.cfg.Zone)
-		if err != nil {
-			return fmt.Errorf("failed to get record name for domain %s: %w", domain, err)
-		}
-
+	for _, recordName := range prov.recordNames {
 		if ips.IPv4.IsValid() {
 			changes = append(changes, &scwdomain.RecordChange{
 				Set: &scwdomain.RecordChangeSet{
@@ -188,7 +199,7 @@ func (prov *Provider) Update(ctx context.Context, ips lib.IPs) error {
 		return nil
 	}
 
-	_, err := api.UpdateDNSZoneRecords(&scwdomain.UpdateDNSZoneRecordsRequest{
+	_, err := prov.api.UpdateDNSZoneRecords(&scwdomain.UpdateDNSZoneRecordsRequest{
 		DNSZone:                 prov.cfg.Zone,
 		Changes:                 changes,
 		ReturnAllRecords:        new(false),

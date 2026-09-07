@@ -97,7 +97,7 @@ func (resol *Resolver) Resolve(ctx context.Context, protocols config.Protocols) 
 
 	var reqErrs []error
 	for _, serviceURL := range resol.cfg.URL {
-		for _, proto := range missingProtos.Slice() {
+		for proto := range missingProtos.Seq() {
 			client := resol.clientv4
 			if proto == internal.IPv6 {
 				client = resol.clientv6
@@ -120,10 +120,11 @@ func (resol *Resolver) Resolve(ctx context.Context, protocols config.Protocols) 
 				continue
 			}
 
-			ipAddr, proto, isPublic := internal.IsPublicIP(resp.String())
-			resol.logger.Debug().Str("response", resp.String()).Str("url", serviceURL).Str("proto", proto).Bool("ispublic", isPublic).Msg("IP response")
+			respStr := resp.String()
+			ipAddr, proto, isPublic := internal.IsPublicIP(respStr)
+			resol.logger.Debug().Str("response", respStr).Str("url", serviceURL).Str("proto", proto).Bool("ispublic", isPublic).Msg("IP response")
 			if !ipAddr.IsValid() {
-				reqErrs = append(reqErrs, fmt.Errorf("%w returned by %s (%s): %q", ErrInvalidAddress, serviceURL, proto, resp.String()))
+				reqErrs = append(reqErrs, fmt.Errorf("%w returned by %s (%s): %q", ErrInvalidAddress, serviceURL, proto, respStr))
 
 				continue
 			}
