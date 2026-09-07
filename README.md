@@ -69,6 +69,7 @@ See [Configuration](docs/configuration.md) for file discovery, presets, shared s
 
 - [`ip_service`](docs/resolver.md#ip_service) - external HTTP IP service
 - [`netif`](docs/resolver.md#netif) - network interface
+- [`shell`](docs/resolver.md#shell) - shell command
 
 **[Providers](docs/provider.md):**
 

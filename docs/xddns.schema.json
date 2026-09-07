@@ -112,7 +112,7 @@
         "proxy": {
             "allOf": [
                 {
-                    "$ref": "#/$defs/proxyPartial"
+                    "$ref": "#/$defs/proxyOptional"
                 },
                 {
                     "if": {
@@ -126,7 +126,7 @@
                 }
             ]
         },
-        "proxyPartial": {
+        "proxyOptional": {
             "unevaluatedProperties": false,
             "description": "Proxy settings, a proxy URL, or false to disable the proxy.",
             "oneOf": [
@@ -162,10 +162,10 @@
                 }
             }
         },
-        "proxyAwarePartial": {
+        "proxyAwareOptional": {
             "properties": {
                 "proxy": {
-                    "$ref": "#/$defs/proxyPartial"
+                    "$ref": "#/$defs/proxyOptional"
                 }
             }
         },
@@ -187,9 +187,6 @@
             "unevaluatedProperties": false,
             "allOf": [
                 {
-                    "$ref": "#/$defs/dyndnsConfig"
-                },
-                {
                     "properties": {
                         "type": {
                             "const": "dyndns"
@@ -198,13 +195,9 @@
                     "required": [
                         "type"
                     ]
-                }
-            ]
-        },
-        "dyndnsConfig": {
-            "allOf": [
+                },
                 {
-                    "$ref": "#/$defs/dyndnsConfigPartial"
+                    "$ref": "#/$defs/dyndnsConfig"
                 },
                 {
                     "$ref": "#/$defs/proxyAware"
@@ -217,13 +210,13 @@
                 }
             ]
         },
-        "dyndnsConfigPartial": {
+        "dyndnsConfig": {
             "allOf": [
                 {
                     "$ref": "#/$defs/protocolAware"
                 },
                 {
-                    "$ref": "#/$defs/proxyAwarePartial"
+                    "$ref": "#/$defs/proxyAwareOptional"
                 },
                 {
                     "properties": {
@@ -251,9 +244,6 @@
             "unevaluatedProperties": false,
             "allOf": [
                 {
-                    "$ref": "#/$defs/ionosConfig"
-                },
-                {
                     "properties": {
                         "type": {
                             "const": "ionos"
@@ -262,13 +252,9 @@
                     "required": [
                         "type"
                     ]
-                }
-            ]
-        },
-        "ionosConfig": {
-            "allOf": [
+                },
                 {
-                    "$ref": "#/$defs/ionosConfigPartial"
+                    "$ref": "#/$defs/ionosConfig"
                 },
                 {
                     "$ref": "#/$defs/proxyAware"
@@ -293,13 +279,13 @@
                 }
             ]
         },
-        "ionosConfigPartial": {
+        "ionosConfig": {
             "allOf": [
                 {
                     "$ref": "#/$defs/protocolAware"
                 },
                 {
-                    "$ref": "#/$defs/proxyAwarePartial"
+                    "$ref": "#/$defs/proxyAwareOptional"
                 },
                 {
                     "properties": {
@@ -329,9 +315,6 @@
             "unevaluatedProperties": false,
             "allOf": [
                 {
-                    "$ref": "#/$defs/scalewayConfig"
-                },
-                {
                     "properties": {
                         "type": {
                             "const": "scaleway"
@@ -340,13 +323,9 @@
                     "required": [
                         "type"
                     ]
-                }
-            ]
-        },
-        "scalewayConfig": {
-            "allOf": [
+                },
                 {
-                    "$ref": "#/$defs/scalewayConfigPartial"
+                    "$ref": "#/$defs/scalewayConfig"
                 },
                 {
                     "$ref": "#/$defs/proxyAware"
@@ -361,13 +340,13 @@
                 }
             ]
         },
-        "scalewayConfigPartial": {
+        "scalewayConfig": {
             "allOf": [
                 {
                     "$ref": "#/$defs/protocolAware"
                 },
                 {
-                    "$ref": "#/$defs/proxyAwarePartial"
+                    "$ref": "#/$defs/proxyAwareOptional"
                 },
                 {
                     "properties": {
@@ -405,9 +384,6 @@
             "unevaluatedProperties": false,
             "allOf": [
                 {
-                    "$ref": "#/$defs/stratoConfig"
-                },
-                {
                     "properties": {
                         "type": {
                             "const": "strato"
@@ -416,13 +392,9 @@
                     "required": [
                         "type"
                     ]
-                }
-            ]
-        },
-        "stratoConfig": {
-            "allOf": [
+                },
                 {
-                    "$ref": "#/$defs/stratoConfigPartial"
+                    "$ref": "#/$defs/stratoConfig"
                 },
                 {
                     "$ref": "#/$defs/proxyAware"
@@ -436,13 +408,13 @@
                 }
             ]
         },
-        "stratoConfigPartial": {
+        "stratoConfig": {
             "allOf": [
                 {
                     "$ref": "#/$defs/protocolAware"
                 },
                 {
-                    "$ref": "#/$defs/proxyAwarePartial"
+                    "$ref": "#/$defs/proxyAwareOptional"
                 },
                 {
                     "properties": {
@@ -463,12 +435,47 @@
                 }
             ]
         },
-        "ipService": {
+        "shell": {
             "unevaluatedProperties": false,
             "allOf": [
                 {
-                    "$ref": "#/$defs/ipServiceConfig"
+                    "properties": {
+                        "type": {
+                            "const": "shell"
+                        }
+                    },
+                    "required": [
+                        "type"
+                    ]
                 },
+                {
+                    "$ref": "#/$defs/shellConfig"
+                },
+                {
+                    "required": [
+                        "command"
+                    ]
+                }
+            ]
+        },
+        "shellConfig": {
+            "allOf": [
+                {
+                    "$ref": "#/$defs/protocolAware"
+                },
+                {
+                    "properties": {
+                        "command": {
+                            "type": "string",
+                            "description": "Shell command to execute."
+                        }
+                    }
+                }
+            ]
+        },
+        "ipService": {
+            "unevaluatedProperties": false,
+            "allOf": [
                 {
                     "properties": {
                         "type": {
@@ -478,13 +485,9 @@
                     "required": [
                         "type"
                     ]
-                }
-            ]
-        },
-        "ipServiceConfig": {
-            "allOf": [
+                },
                 {
-                    "$ref": "#/$defs/ipServiceConfigPartial"
+                    "$ref": "#/$defs/ipServiceConfig"
                 },
                 {
                     "$ref": "#/$defs/proxyAware"
@@ -496,13 +499,13 @@
                 }
             ]
         },
-        "ipServiceConfigPartial": {
+        "ipServiceConfig": {
             "allOf": [
                 {
                     "$ref": "#/$defs/protocolAware"
                 },
                 {
-                    "$ref": "#/$defs/proxyAwarePartial"
+                    "$ref": "#/$defs/proxyAwareOptional"
                 },
                 {
                     "properties": {
@@ -519,9 +522,6 @@
             "unevaluatedProperties": false,
             "allOf": [
                 {
-                    "$ref": "#/$defs/netifConfig"
-                },
-                {
                     "properties": {
                         "type": {
                             "const": "netif"
@@ -530,13 +530,9 @@
                     "required": [
                         "type"
                     ]
-                }
-            ]
-        },
-        "netifConfig": {
-            "allOf": [
+                },
                 {
-                    "$ref": "#/$defs/netifConfigPartial"
+                    "$ref": "#/$defs/netifConfig"
                 },
                 {
                     "required": [
@@ -545,7 +541,7 @@
                 }
             ]
         },
-        "netifConfigPartial": {
+        "netifConfig": {
             "allOf": [
                 {
                     "$ref": "#/$defs/protocolAware"
@@ -563,9 +559,6 @@
             "unevaluatedProperties": false,
             "allOf": [
                 {
-                    "$ref": "#/$defs/discordConfig"
-                },
-                {
                     "properties": {
                         "type": {
                             "const": "discord"
@@ -574,13 +567,9 @@
                     "required": [
                         "type"
                     ]
-                }
-            ]
-        },
-        "discordConfig": {
-            "allOf": [
+                },
                 {
-                    "$ref": "#/$defs/discordConfigPartial"
+                    "$ref": "#/$defs/discordConfig"
                 },
                 {
                     "$ref": "#/$defs/proxyAware"
@@ -602,10 +591,10 @@
                 }
             ]
         },
-        "discordConfigPartial": {
+        "discordConfig": {
             "allOf": [
                 {
-                    "$ref": "#/$defs/proxyAwarePartial"
+                    "$ref": "#/$defs/proxyAwareOptional"
                 },
                 {
                     "properties": {
@@ -668,6 +657,9 @@
                     },
                     {
                         "$ref": "#/$defs/netif"
+                    },
+                    {
+                        "$ref": "#/$defs/shell"
                     }
                 ]
             }
@@ -700,16 +692,16 @@
                         {
                             "anyOf": [
                                 {
-                                    "$ref": "#/$defs/dyndnsConfigPartial"
+                                    "$ref": "#/$defs/dyndnsConfig"
                                 },
                                 {
-                                    "$ref": "#/$defs/ionosConfigPartial"
+                                    "$ref": "#/$defs/ionosConfig"
                                 },
                                 {
-                                    "$ref": "#/$defs/scalewayConfigPartial"
+                                    "$ref": "#/$defs/scalewayConfig"
                                 },
                                 {
-                                    "$ref": "#/$defs/stratoConfigPartial"
+                                    "$ref": "#/$defs/stratoConfig"
                                 }
                             ]
                         }
@@ -742,10 +734,13 @@
                         {
                             "anyOf": [
                                 {
-                                    "$ref": "#/$defs/ipServiceConfigPartial"
+                                    "$ref": "#/$defs/ipServiceConfig"
                                 },
                                 {
-                                    "$ref": "#/$defs/netifConfigPartial"
+                                    "$ref": "#/$defs/netifConfig"
+                                },
+                                {
+                                    "$ref": "#/$defs/shellConfig"
                                 }
                             ]
                         }
@@ -756,6 +751,9 @@
                 },
                 {
                     "$ref": "#/$defs/netif"
+                },
+                {
+                    "$ref": "#/$defs/shell"
                 }
             ]
         },
@@ -772,7 +770,7 @@
                         {
                             "anyOf": [
                                 {
-                                    "$ref": "#/$defs/discordConfigPartial"
+                                    "$ref": "#/$defs/discordConfig"
                                 }
                             ]
                         }

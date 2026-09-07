@@ -75,6 +75,7 @@ Choose one provider and at least one resolver in every updater. Optional notifie
 
 - [`ip_service`](resolver.md#ip_service) - external HTTP IP service
 - [`netif`](resolver.md#netif) - network interface
+- [`shell`](resolver.md#shell) - shell command
 
 **[Providers](provider.md):**
 

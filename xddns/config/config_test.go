@@ -43,6 +43,16 @@ func FuzzConfigYAMLSchemaValidation(f *testing.F) {
 	for _, seed := range [][]byte{
 		[]byte(`
 updaters:
+  - name: shell
+    provider:
+      type: dyndns
+      url: https://dyn.example.com/update
+      domain: home.example.com
+    resolvers:
+      - type: shell
+        command: [/usr/local/bin/public-ip]`),
+		[]byte(`
+updaters:
   - name: home
     provider:
       type: dyndns
