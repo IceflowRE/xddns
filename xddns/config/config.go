@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"strings"
 	"time"
 
 	"github.com/goccy/go-yaml"
@@ -103,6 +104,17 @@ func LoadConfig(path string) (*Config, string, error) {
 	return nil, "", ErrNoConfigFound
 }
 
+// FindConfigPath checks candidate locations in order and returns the first existing path.
+func FindConfigPath() string {
+	for _, path := range configPathCandidates() {
+		if fileExists(path) {
+			return path
+		}
+	}
+
+	return ""
+}
+
 func loadConfigFromFile(path string) (*Config, error) {
 	data, err := os.ReadFile(path) //nolint:gosec
 	if err != nil {
@@ -125,9 +137,18 @@ func validateConfigFilePermissions(path string) error {
 	}
 
 	mode := info.Mode().Perm()
-	// require 0600 permissions
+
+	if isSystemdCredential(path) {
+		// systemd credential files are set to 0440 by default.
+		if mode&0o0037 != 0 {
+			return fmt.Errorf("%w (%04o): %q. Unexpected permissions for a systemd credential file", ErrInsecureConfigFile, mode, path)
+		}
+
+		return nil
+	}
+
 	if mode&0o0077 != 0 {
-		return fmt.Errorf("%w (%04o): %q. It should be read and writeable only by the owner (0600)", ErrInsecureConfigFile, mode, path)
+		return fmt.Errorf("%w (%04o): %q. It should be readable and writeable only by the owner (0600)", ErrInsecureConfigFile, mode, path)
 	}
 
 	return nil
@@ -189,15 +210,28 @@ func configPathCandidates() []string {
 	return candidates
 }
 
-// FindConfigPath checks candidate locations in order and returns the first existing path.
-func FindConfigPath() string {
-	for _, path := range configPathCandidates() {
-		if fileExists(path) {
-			return path
-		}
+// isSystemdCredential reports whether path resides under the directory systemd exposes for LoadCredential=/SetCredential=.
+func isSystemdCredential(path string) bool {
+	credDir := os.Getenv("CREDENTIALS_DIRECTORY")
+	if credDir == "" {
+		return false
 	}
 
-	return ""
+	absCredDir, err := filepath.Abs(credDir)
+	if err != nil {
+		return false
+	}
+	absPath, err := filepath.Abs(path)
+	if err != nil {
+		return false
+	}
+
+	rel, err := filepath.Rel(absCredDir, absPath)
+	if err != nil {
+		return false
+	}
+
+	return rel != "." && rel != ".." && !strings.HasPrefix(rel, ".."+string(filepath.Separator))
 }
 
 func fileExists(filename string) bool {
