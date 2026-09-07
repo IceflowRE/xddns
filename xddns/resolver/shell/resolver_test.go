@@ -43,7 +43,7 @@ func TestResolver_Resolve(t *testing.T) {
 	isLinux := runtime.GOOS == "linux"
 	t.Run("resolves requested addresses", func(t *testing.T) {
 		if !isLinux {
-			t.Skip("skipping test on non-Linux OS")
+			t.Skip("shell test expects Linux")
 		}
 		resol := newResolver(t, "printf '8.8.8.8\\n2001:4860:4860::8888\\n' | grep -E '8\\.8\\.8\\.8|2001:'")
 		ips, err := resol.Resolve(context.Background(), config.Protocols{IPv4: true, IPv6: true})
@@ -54,7 +54,7 @@ func TestResolver_Resolve(t *testing.T) {
 
 	t.Run("returns partial result", func(t *testing.T) {
 		if !isLinux {
-			t.Skip("skipping test on non-Linux OS")
+			t.Skip("shell test expects Linux")
 		}
 		resol := newResolver(t, "printf '8.8.8.8\\n'")
 		ips, err := resol.Resolve(context.Background(), config.Protocols{IPv4: true, IPv6: true})
@@ -65,7 +65,7 @@ func TestResolver_Resolve(t *testing.T) {
 
 	t.Run("rejects non-public output", func(t *testing.T) {
 		if !isLinux {
-			t.Skip("skipping test on non-Linux OS")
+			t.Skip("shell test expects Linux")
 		}
 		resol := newResolver(t, "printf '192.168.1.1\\n'")
 		_, err := resol.Resolve(context.Background(), config.Protocols{IPv4: true})

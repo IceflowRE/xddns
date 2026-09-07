@@ -74,7 +74,7 @@ func (resol *Resolver) Resolve(ctx context.Context, protocols config.Protocols) 
 
 	var errs []error
 	missingProtos := protocols
-	for _, value := range strings.Fields(string(output)) {
+	for value := range strings.FieldsSeq(string(output)) {
 		ipAddr, proto, isPublic := internal.IsPublicIP(value)
 		resol.logger.Debug().Str("output", value).Str("proto", proto).Bool("ispublic", isPublic).Msg("command IP response")
 		if !ipAddr.IsValid() {
