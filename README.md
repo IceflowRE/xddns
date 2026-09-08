@@ -1,6 +1,6 @@
 # XDDNS
 
-XDDNS is a dynamic DNS client for keeping DNS records aligned with your current IP address. It supports multiple IP resolvers, DNS providers, and notification services, and can run once from the command line or continuously as a service.
+XDDNS is a dynamic DNS client for keeping DNS records aligned with your current IP address. It supports multiple IP resolvers, DNS providers and notification services and can run once from the command line or continuously as a service.
 
 ## Installation
 
@@ -26,10 +26,16 @@ paru -S xddns
 
 ## Quick start
 
-Create `xddns.yaml` in the current directory, or use `--config /path/to/xddns.yaml` to select a file explicitly. The file must be readable and writable only by its owner:
+Create `xddns.yaml` in the current directory or use `--config /path/to/xddns.yaml` to select a file explicitly. The file must be readable and writable only by its owner:
 
 ```shell
 chmod 600 xddns.yaml
+```
+
+If you use systemd, you can place the configuration file in `/etc/xddns/xddns.yaml` and enable the service:
+
+```shell
+sudo systemctl enable --now xddns.service
 ```
 
 The smallest useful configuration has one provider, one resolver and one updater. Replace the example values with credentials and names from your DNS provider:
@@ -61,7 +67,7 @@ Then start the daemon:
 xddns daemon
 ```
 
-See [Configuration](docs/configuration.md) for file discovery, presets, shared settings, and provider-specific options. See [CLI](docs/cli.md) for all commands.
+See [Configuration](docs/configuration.md) for file discovery, presets, shared settings and provider-specific options. See [CLI](docs/cli.md) for all commands.
 
 ## Supported drivers
 
@@ -119,7 +125,7 @@ Each configuration type (`notifier`, `provider`, `resolver`) has its own configu
 
 ## Disclaimer
 
-All product names, trademarks, service marks, logos, and brands mentioned in this repository are property of their respective owners. This project is an independent open-source tool and is not affiliated, associated, authorized, endorsed by, or in any way officially connected with any of the companies, providers, or services referenced in this project.
+All product names, trademarks, service marks, logos and brands mentioned in this repository are property of their respective owners. This project is an independent open-source tool and is not affiliated, associated, authorized, endorsed by or in any way officially connected with any of the companies, providers or services referenced in this project.
 
 ## License
 
