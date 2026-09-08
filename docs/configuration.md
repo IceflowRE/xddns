@@ -1,6 +1,6 @@
 # Configuration
 
-XDDNS reads YAML configuration. Keep credentials out of updater names because names appear in logs and notifications. Protect the file with mode `0600`, other modes are rejected.
+XDDNS reads YAML configuration. Keep credentials out of updater names because names appear in logs and notifications. The file itself should be only read- and writeable by the owner (`0600`), other file permissions are rejected.
 
 ## Selecting a file
 
@@ -10,7 +10,7 @@ Use `--config` (or `-c`) with any command:
 xddns --config /etc/xddns.yaml update
 ```
 
-Without that flag, set `XDDNS_CONFIG` to use one specific file. Otherwise XDDNS checks the current directory, the user configuration directory and system locations. The usual filenames are `xddns.yaml` and `xddns.yml`. `config path` prints the file that would be selected.
+Without that flag, set `XDDNS_CONFIG` to use one specific file. Otherwise XDDNS checks the current directory, the user configuration directory and system locations. The usual filenames are `xddns.yaml` and `xddns.yml`. `xddns config path` prints the file that would be selected.
 
 ## Main settings
 

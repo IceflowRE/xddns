@@ -10,6 +10,10 @@ XDDNS is a dynamic DNS client for keeping DNS records aligned with your current 
 go install github.com/iceflowre/xddns/cmd/xddns@latest
 ```
 
+### Prebuilt binaries
+
+Prebuilt binaries are available for Linux, macOS and Windows on the [releases page](https://github.com/IceflowRE/xddns/releases).
+
 ### Arch Linux
 
 #### AUR
@@ -38,7 +42,10 @@ If you use systemd, you can place the configuration file in `/etc/xddns/xddns.ya
 sudo systemctl enable --now xddns.service
 ```
 
-The smallest useful configuration has one provider, one resolver and one updater. Replace the example values with credentials and names from your DNS provider:
+> [!WARNING]
+> Updater names must **not** contain any sensitive information like passwords or API keys. The updater name is used for logging and notifications.
+
+The smallest useful configuration has one provider, one resolver and one updater. Replace the example values with credentials and names from your DNS provider.
 
 ```yaml
 updaters:
@@ -87,26 +94,6 @@ See [Configuration](docs/configuration.md) for file discovery, presets, shared s
 **[Notifiers](docs/notifier.md):**
 
 - [`discord`](docs/notifier.md#discord) - Discord webhook notifier
-
-### Configuration
-
-Updater names must **not** contain any sensitive information like passwords or API keys. The updater name is used for logging and notifications.
-
-```yaml
-updaters:
-  - name: "my-domain.com"
-    provider:
-      type: "dyndns"
-      domain: "my-domain.com"
-      url: "https://example.com/nic/update"
-    resolvers:
-      - type: "netif"
-        interface: "eth0"
-      - type: "ip_service"
-        url:
-          - "https://api.ipify.org"
-          - "https://ifconfig.me/ip"
-```
 
 ## Development
 
