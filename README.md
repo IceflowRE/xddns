@@ -67,7 +67,7 @@ Then start the daemon:
 xddns daemon
 ```
 
-See [Configuration](docs/configuration.md) for file discovery, presets, shared settings and provider-specific options. See [CLI](docs/cli.md) for all commands.
+See [Configuration](docs/configuration.md) for file discovery, presets, shared settings and provider-specific options. Use `xddns --help` to see all available commands and options.
 
 ## Supported drivers
 
