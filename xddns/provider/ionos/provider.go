@@ -38,7 +38,7 @@ type Config struct {
 
 	Domain       lib.StringSlice  `yaml:"domain,omitempty" comment:"List of domain names to update (e.g. example.com, sub.example.com). Provider either the domains OR update_url."` //nolint:lll
 	UpdateURL    lib.SecretString `yaml:"update_url,omitempty" comment:"Update URL (e.g. https://ipv4.api.hosting.ionos.com/dns/v1/dyndns?q=...)"`
-	PublicPrefix string           `yaml:"public_prefix" comment:"Public prefix"`
+	PublicPrefix lib.SecretString `yaml:"public_prefix" comment:"Public prefix"`
 	Secret       lib.SecretString `yaml:"secret" comment:"Secret"`
 }
 
@@ -64,10 +64,10 @@ func (cfg *Config) Prepare() (errs []error) {
 	default:
 	}
 
-	if cfg.PublicPrefix == "" {
+	if cfg.PublicPrefix.Expose() == "" {
 		errs = append(errs, ErrPublicPrefixRequired)
 	}
-	if cfg.Secret == "" {
+	if cfg.Secret.Expose() == "" {
 		errs = append(errs, ErrSecretRequired)
 	}
 
@@ -98,7 +98,7 @@ func New(cfg Config, logger zerolog.Logger) (sw *Provider, err error) {
 			internal.WithRestyRetry(),
 			internal.WithRestyProxy(cfg.Proxy.FullURL()),
 		).
-			SetHeader("X-API-Key", fmt.Sprintf("%s.%s", cfg.PublicPrefix, cfg.Secret.Expose())).
+			SetHeader("X-API-Key", fmt.Sprintf("%s.%s", cfg.PublicPrefix.Expose(), cfg.Secret.Expose())).
 			SetBaseURL("https://api.hosting.ionos.com/dns"),
 		logger: logger,
 	}
