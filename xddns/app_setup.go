@@ -206,7 +206,9 @@ func createUpdaters(cfg *ResolvedConfig, opts *appOptions, logger zerolog.Logger
 	var errs []error
 	for uIdx, uCfg := range cfg.Updaters {
 		upd := updater{
-			Name: uCfg.Name,
+			Name:      uCfg.Name,
+			Notifiers: make([]namedDriver[notifier.Notifier], 0, len(uCfg.Notifiers)),
+			Resolvers: make([]namedProtocolDriver[resolver.Resolver], 0, len(uCfg.Resolvers)),
 		}
 
 		nDriver, err := getOrCreateNamedDriver(

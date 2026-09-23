@@ -132,7 +132,7 @@ func (notif *Notifier) Notify(ctx context.Context, notification notifier.Notific
 		color = 0x000000
 	}
 
-	var descParts []string
+	descParts := make([]string, 0, 3) //nolint:mnd
 	if notification.IPs.IPv4.IsValid() {
 		descParts = append(descParts, "IPv4: `"+notification.IPs.IPv4.String()+"`")
 	}

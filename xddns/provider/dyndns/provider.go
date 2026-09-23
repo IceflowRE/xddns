@@ -116,7 +116,7 @@ func New(cfg Config, logger zerolog.Logger) (*Provider, error) {
 // Update pushes the current IP(s) to a dyndns2-compatible update endpoint,
 // e.g. https://<host>/nic/update?hostname=<domain>&myip=<ip>
 func (prov *Provider) Update(ctx context.Context, ips lib.IPs) (err error) {
-	var myIPs []string
+	myIPs := make([]string, 0, 2) //nolint:mnd
 	if ips.IPv4.IsValid() {
 		myIPs = append(myIPs, ips.IPv4.String())
 	}

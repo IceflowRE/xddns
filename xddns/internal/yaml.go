@@ -31,7 +31,15 @@ func MergeYaml(base ast.Node, override ast.Node) (ast.Node, error) { //nolint:go
 		return nil, err
 	}
 
+	capacity := 0
+	if baseMap != nil {
+		capacity += len(baseMap.Values)
+	}
+	if overrideMap != nil {
+		capacity += len(overrideMap.Values)
+	}
 	merged := ast.Mapping(nil, false)
+	merged.Values = make([]*ast.MappingValueNode, 0, capacity)
 
 	// index override keys -> their position in merged.Values
 	overrideIndex := map[string]int{}
