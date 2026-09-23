@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/rs/zerolog"
 	"resty.dev/v3"
@@ -25,6 +26,11 @@ var (
 	ErrNoIPServiceNamesProvided = errors.New("no IP service names provided")
 	ErrNonPublicAddress         = errors.New("non-public address")
 	ErrUnexpectedStatusCode     = errors.New("unexpected status code")
+)
+
+const (
+	ipServiceRequestTimeout = 3 * time.Second
+	ipResolutionTimeout     = 10 * time.Second
 )
 
 // Config configuration.
@@ -81,18 +87,23 @@ func New(cfg Config, logger zerolog.Logger) (*Resolver, error) {
 			internal.WithRestyRetry(),
 			internal.WithRestyProxy(cfg.Proxy.FullURL()),
 			internal.WithTCP("tcp4"),
-		).SetRedirectPolicy(resty.RedirectNoPolicy()),
+		).SetTimeout(ipServiceRequestTimeout).
+			SetRedirectPolicy(resty.RedirectNoPolicy()),
 		clientv6: internal.RestyClient(
 			internal.WithRestyRetry(),
 			internal.WithRestyProxy(cfg.Proxy.FullURL()),
 			internal.WithTCP("tcp6"),
-		).SetRedirectPolicy(resty.RedirectNoPolicy()),
+		).SetTimeout(ipServiceRequestTimeout).
+			SetRedirectPolicy(resty.RedirectNoPolicy()),
 		logger: logger,
 	}, nil
 }
 
 // Resolve resolves the public IP address using the configured IP services.
 func (resol *Resolver) Resolve(ctx context.Context, protocols config.Protocols) (ips lib.IPs, err error) { //nolint:gocognit
+	ctx, cancel := context.WithTimeout(ctx, ipResolutionTimeout)
+	defer cancel()
+
 	missingProtos := protocols
 
 	var reqErrs []error
