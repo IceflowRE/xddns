@@ -117,49 +117,61 @@ func (app *App) RunDaemon(ctx context.Context) error {
 
 // Returned error is already logged, except for context cancellation, which is not logged.
 func (app *App) runUpdater(ctx context.Context, opts *updateOptions, upd *updater, cache map[resolver.Resolver]resolverResult) error {
+	shouldNotify := !opts.DryRun || opts.DryRunNotify
+
 	ips, err := app.resolveIPs(ctx, upd.Resolvers, upd.Provider.Protocols, cache)
 	if err != nil {
 		app.logger.Error().Err(err).Str("updater", upd.Name).Msg("failed to resolve IPs")
-		if !opts.DryRun || opts.DryRunNotify {
+		if shouldNotify {
 			app.notify(ctx, upd.Notifiers, notifier.Notification{
 				Reason:      notifier.ReasonFailedToResolve,
 				UpdaterName: upd.Name,
-				Error:       err,
+				Error:       getMostRecentError(err),
 			})
 		}
 
 		return err
 	}
 
-	last, ok := app.lastIPs[upd]
-	if ok && last == ips {
+	if last, ok := app.lastIPs[upd]; ok && last == ips {
 		app.logger.Debug().Str("updater", upd.Name).Msg("no IP change, skipping update")
 
 		return nil
 	}
 
 	if opts.DryRun {
-		app.logger.Info().Str("updater", upd.Name).Str("ipv4", ips.IPv4.String()).Str("ipv6", ips.IPv6.String()).Msg("dry run, skipping update")
-	} else {
-		err = upd.Provider.Driver.Update(ctx, ips)
-		if err != nil {
-			app.logger.Error().Err(err).Str("updater", upd.Name).Msgf("failed to update")
-			if !opts.DryRun || opts.DryRunNotify {
-				app.notify(ctx, upd.Notifiers, notifier.Notification{
-					Reason:      notifier.ReasonUpdateFailed,
-					UpdaterName: upd.Name,
-					Error:       err,
-					IPs:         ips,
-				})
-			}
+		app.logIPEvent(upd, ips).Msg("dry run, skipping update")
 
-			return err
+		if shouldNotify {
+			app.notify(ctx, upd.Notifiers, notifier.Notification{
+				Reason:      notifier.ReasonUpdateSucceeded,
+				UpdaterName: upd.Name,
+				IPs:         ips,
+			})
 		}
-		app.lastIPs[upd] = ips
-		app.logger.Info().Str("updater", upd.Name).Str("ipv4", ips.IPv4.String()).Str("ipv6", ips.IPv6.String()).Msg("successfully updated")
+
+		return nil
 	}
 
-	if !opts.DryRun || opts.DryRunNotify {
+	err = upd.Provider.Driver.Update(ctx, ips)
+	if err != nil {
+		app.logger.Error().Err(err).Str("updater", upd.Name).Msg("failed to update")
+		if shouldNotify {
+			app.notify(ctx, upd.Notifiers, notifier.Notification{
+				Reason:      notifier.ReasonUpdateFailed,
+				UpdaterName: upd.Name,
+				Error:       getMostRecentError(err),
+				IPs:         ips,
+			})
+		}
+
+		return err
+	}
+
+	app.lastIPs[upd] = ips
+	app.logIPEvent(upd, ips).Msg("successfully updated")
+
+	if shouldNotify {
 		app.notify(ctx, upd.Notifiers, notifier.Notification{
 			Reason:      notifier.ReasonUpdateSucceeded,
 			UpdaterName: upd.Name,
@@ -183,6 +195,19 @@ func (app *App) daemonUpdateRun(ctx context.Context) error {
 	}
 
 	return err
+}
+
+// logIPEvent logs the resolved IPs for the given updater and returns the log event for further chaining.
+func (app *App) logIPEvent(upd *updater, ips lib.IPs) *zerolog.Event {
+	lEvent := app.logger.Info().Str("updater", upd.Name) //nolint:zerologlint
+	if upd.Provider.Protocols.IPv4 {
+		lEvent = lEvent.Str("ipv4", ips.IPv4.String())
+	}
+	if upd.Provider.Protocols.IPv6 {
+		lEvent = lEvent.Str("ipv6", ips.IPv6.String())
+	}
+
+	return lEvent
 }
 
 type resolverResult struct {
@@ -287,4 +312,15 @@ func isNetworkError(err error) bool {
 	}
 
 	return false
+}
+
+func getMostRecentError(err error) error {
+	if err == nil {
+		return nil
+	}
+	if errs := lib.UnwrapErrors(err); len(errs) > 0 {
+		return errs[len(errs)-1]
+	}
+
+	return err
 }
