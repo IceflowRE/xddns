@@ -1,5 +1,9 @@
 # XDDNS
 
+![maintained](https://img.shields.io/badge/maintained-yes-brightgreen.svg)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/kenyoni-software/go-multisplit/blob/main/LICENSE.md)
+![Programming Language](https://img.shields.io/badge/language-Go-orange.svg)
+
 XDDNS is a dynamic DNS client for keeping DNS records aligned with your current IP address. It supports multiple IP resolvers, DNS providers and notification services and can run once from the command line or continuously as a service.
 
 ## Installation
