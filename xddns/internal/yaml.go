@@ -17,7 +17,7 @@ var ErrMappingNodeExpected = errors.New("expected a mapping node")
 // If a key exists in both nodes but their values are not both mapping nodes, the value from the override node will be used.
 // The order of keys in the resulting merged node will have keys from the override node first,
 // followed by keys from the base node that were not present in the override node.
-func MergeYaml(base ast.Node, override ast.Node) (ast.Node, error) { //nolint:gocognit,ireturn
+func MergeYaml(base ast.Node, override ast.Node) (ast.Node, error) { //nolint:gocognit,gocyclo,ireturn
 	if base == nil && override == nil {
 		return nil, nil //nolint:nilnil
 	}
