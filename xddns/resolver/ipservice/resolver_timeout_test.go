@@ -3,29 +3,34 @@ package ipservice
 import (
 	"context"
 	"net/http"
+	"sync/atomic"
 	"testing"
 	"testing/synctest"
 	"time"
 
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/require"
-	"resty.dev/v3"
 
 	"github.com/iceflowre/xddns/xddns/config"
+	"github.com/iceflowre/xddns/xddns/internal"
 )
 
-type blockingRoundTripper struct{}
+type blockingRoundTripper struct {
+	requests atomic.Int32
+}
 
-func (blockingRoundTripper) RoundTrip(request *http.Request) (*http.Response, error) {
+func (transport *blockingRoundTripper) RoundTrip(request *http.Request) (*http.Response, error) {
+	transport.requests.Add(1)
 	<-request.Context().Done()
 
 	return nil, request.Context().Err()
 }
 
-func TestResolverTotalTimeout(t *testing.T) {
+func TestResolverRequestTimeoutRetries(t *testing.T) {
+	transport := &blockingRoundTripper{}
 	resolver := &Resolver{
 		cfg:      Config{URL: []string{"http://example.test"}},
-		clientv4: resty.New().SetTransport(blockingRoundTripper{}),
+		clientv4: internal.RestyClient(internal.WithRestyRetry()).SetTimeout(ipServiceRequestTimeout).SetTransport(transport),
 		logger:   zerolog.Nop(),
 	}
 
@@ -37,9 +42,17 @@ func TestResolverTotalTimeout(t *testing.T) {
 		}()
 
 		synctest.Wait()
-		time.Sleep(ipResolutionTimeout)
+		time.Sleep(1 * time.Second)
 		synctest.Wait()
+		select {
+		case err := <-done:
+			t.Fatalf("request completed before the retry budget was exhausted: %v", err)
+		default:
+		}
+		require.LessOrEqual(t, transport.requests.Load(), int32(1))
 
+		synctest.Wait()
 		require.ErrorIs(t, <-done, context.DeadlineExceeded)
+		require.Equal(t, int32(4), transport.requests.Load())
 	})
 }

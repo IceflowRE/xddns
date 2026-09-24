@@ -30,7 +30,6 @@ var (
 
 const (
 	ipServiceRequestTimeout = 3 * time.Second
-	ipResolutionTimeout     = 10 * time.Second
 )
 
 // Config configuration.
@@ -101,9 +100,6 @@ func New(cfg Config, logger zerolog.Logger) (*Resolver, error) {
 
 // Resolve resolves the public IP address using the configured IP services.
 func (resol *Resolver) Resolve(ctx context.Context, protocols config.Protocols) (ips lib.IPs, err error) { //nolint:gocognit
-	ctx, cancel := context.WithTimeout(ctx, ipResolutionTimeout)
-	defer cancel()
-
 	missingProtos := protocols
 
 	var reqErrs []error
