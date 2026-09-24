@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.2.1
+
+### Updated
+
+- Performance improvements
+
+### Changed
+
+- Only notify the most recent error (the full error chain is still logged)
+- `public_prefix` in IONOS provider is now a sensitive string
+- Decreased timeout of ipservice resolver
+
 ## 0.2.0
 
 ### Added
