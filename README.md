@@ -40,7 +40,7 @@ Create `xddns.yaml` in the current directory or use `--config /path/to/xddns.yam
 chmod 600 xddns.yaml
 ```
 
-If you use systemd, you can place the configuration file in `/etc/xddns/xddns.yaml` and enable the service:
+If you use systemd, you can place the configuration file in `/etc/xddns.yaml` and enable the service:
 
 ```shell
 sudo systemctl enable --now xddns.service
