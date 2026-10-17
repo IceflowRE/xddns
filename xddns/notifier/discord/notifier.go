@@ -61,7 +61,7 @@ func (cfg *Config) Prepare() (errs []error) {
 		errs = append(errs, fmt.Errorf("invalid url: %w", err))
 	}
 	if u.Scheme != "https" {
-		errs = append(errs, fmt.Errorf("%w %q: Discord webhooks require HTTPS", ErrUnsupportedScheme, u.Scheme))
+		errs = append(errs, fmt.Errorf("%w %q: Discord webhooks requires HTTPS", ErrUnsupportedScheme, u.Scheme))
 	}
 
 	errs = append(errs, cfg.ProxyAwareConfig.Prepare()...)
