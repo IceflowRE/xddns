@@ -11,6 +11,11 @@
 - Only notify the most recent error (the full error chain is still logged)
 - `public_prefix` in IONOS provider is now a sensitive string
 - Decreased timeout of ipservice resolver
+- IONOS update URL requires now HTTPS
+
+### Removed
+
+- Disabled debug of IONOS resty client
 
 ## 0.2.0
 
