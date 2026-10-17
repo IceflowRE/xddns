@@ -28,6 +28,7 @@ var (
 	ErrRequestFailed                          = errors.New("request failed")
 	ErrSecretRequired                         = errors.New("secret is required")
 	ErrUnexpectedStatus                       = errors.New("unexpected status code")
+	ErrUnsupportedScheme                      = errors.New("unsupported scheme")
 	ErrUpdateFailed                           = errors.New("update failed")
 )
 
@@ -57,9 +58,12 @@ func (cfg *Config) Prepare() (errs []error) {
 			errs = append(errs, fmt.Errorf("%w: %w", ErrInvalidDomain, err))
 		}
 	case cfg.UpdateURL != "":
-		_, err := internal.ValidateURL(cfg.UpdateURL.Expose())
+		u, err := internal.ValidateURL(cfg.UpdateURL.Expose())
 		if err != nil {
 			errs = append(errs, fmt.Errorf("invalid update_url: %w", err))
+		}
+		if u.Scheme != "https" {
+			errs = append(errs, fmt.Errorf("%w %q: IONOS update url requires HTTPS", ErrUnsupportedScheme, u.Scheme))
 		}
 	default:
 	}
