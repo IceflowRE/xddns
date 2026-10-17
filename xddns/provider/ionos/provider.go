@@ -172,7 +172,6 @@ func postDYNDNS(ctx context.Context, client *resty.Client, domains []string, des
 	resp = &postDYNDNSResponse{}
 	errResp := postDYNDNSErrorResponse{}
 
-	client.SetDebug(true)
 	httpResp, err := client.R().SetBody(postDYNDNSBody{
 		Domains:     domains,
 		Description: description,
