@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.2.2
+
+### Updated
+
+- Updated dependencies
+- Changed minimum go version to 1.27.3 due to CVE-2026-111943
+
 ## 0.2.1
 
 ### Updated
