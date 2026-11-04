@@ -36,7 +36,10 @@ func TestValidateConfigFilePermissions(t *testing.T) {
 				require.NoError(t, os.WriteFile(path, []byte("updaters: []"), tc.mode))
 				require.NoError(t, os.Chmod(path, tc.mode))
 
-				err := validateConfigFilePermissions(path)
+				file, err := os.Open(path) //nolint:gosec
+				require.NoError(t, err)
+
+				err = validatePlatformConfigFilePermissions(file, path)
 
 				if tc.wantErr {
 					require.Error(t, err)
@@ -73,7 +76,10 @@ func TestValidateConfigFilePermissions(t *testing.T) {
 				require.NoError(t, os.WriteFile(path, []byte("updaters: []"), tc.mode))
 				require.NoError(t, os.Chmod(path, tc.mode))
 
-				err := validateConfigFilePermissions(path)
+				file, err := os.Open(path) //nolint:gosec
+				require.NoError(t, err)
+
+				err = validatePlatformConfigFilePermissions(file, path)
 
 				if tc.wantErr {
 					assert.ErrorIs(t, err, ErrInsecureConfigFile)
@@ -94,7 +100,10 @@ func TestValidateConfigFilePermissions(t *testing.T) {
 		require.NoError(t, os.WriteFile(path, []byte("updaters: []"), 0o440))
 		require.NoError(t, os.Chmod(path, 0o440))
 
-		err := validateConfigFilePermissions(path)
+		file, err := os.Open(path) //nolint:gosec
+		require.NoError(t, err)
+
+		err = validatePlatformConfigFilePermissions(file, path)
 
 		assert.ErrorIs(t, err, ErrInsecureConfigFile)
 	})
@@ -107,32 +116,45 @@ func TestValidateConfigFilePermissions(t *testing.T) {
 		require.NoError(t, os.WriteFile(path, []byte("updaters: []"), 0o440))
 		require.NoError(t, os.Chmod(path, 0o440))
 
-		err := validateConfigFilePermissions(path)
+		file, err := os.Open(path) //nolint:gosec
+		require.NoError(t, err)
+
+		err = validatePlatformConfigFilePermissions(file, path)
 
 		assert.ErrorIs(t, err, ErrInsecureConfigFile)
 	})
+}
 
+func TestLoadConfig(t *testing.T) {
 	t.Run("nonexistent file", func(t *testing.T) {
 		dir := t.TempDir()
 		path := filepath.Join(dir, "does-not-exist.yaml")
 
-		err := validateConfigFilePermissions(path)
+		cfg, loadedPath, err := LoadConfig(path)
 
-		assert.ErrorIs(t, err, os.ErrNotExist)
+		assert.Nil(t, cfg)
+		assert.Empty(t, loadedPath)
+		assert.ErrorIs(t, err, ErrNoConfigFound)
 	})
 }
 
-func TestIsSystemdCredential(t *testing.T) {
+func TestValidateConfigFilePermissionsForFileNil(t *testing.T) {
+	err := validatePlatformConfigFilePermissions(nil, "xddns.yaml")
+
+	assert.ErrorIs(t, err, errNilConfigFileHandle)
+	assert.Contains(t, err.Error(), "config file handle is nil")
+}
+
+func TestIsSystemdCredentialInDirectory(t *testing.T) {
 	t.Run("CREDENTIALS_DIRECTORY unset", func(t *testing.T) {
-		t.Setenv("CREDENTIALS_DIRECTORY", "")
-		assert.False(t, isSystemdCredential("/run/credentials/xddns.service/xddns.yaml"))
+		assert.False(t, isDirInSystemdCredential("/run/credentials/xddns.service/xddns.yaml"))
 	})
 
 	t.Run("file inside CREDENTIALS_DIRECTORY", func(t *testing.T) {
 		credDir := t.TempDir()
+		path := filepath.Join(credDir, "xddns.yaml")
 		t.Setenv("CREDENTIALS_DIRECTORY", credDir)
 
-		path := filepath.Join(credDir, "xddns.yaml")
-		assert.True(t, isSystemdCredential(path))
+		assert.True(t, isDirInSystemdCredential(path))
 	})
 }

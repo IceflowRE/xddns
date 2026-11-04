@@ -34,11 +34,13 @@ paru -S xddns
 
 ## Quick start
 
-Create `xddns.yaml` in the current directory or use `--config /path/to/xddns.yaml` to select a file explicitly. The file must be readable and writable only by its owner:
+Create `xddns.yaml` in the current directory or use `--config /path/to/xddns.yaml` to select a file explicitly. On Unix-like systems, the file must be readable and writable only by its owner:
 
 ```shell
 chmod 600 xddns.yaml
 ```
+
+On Windows, XDDNS checks the file's ACL instead: it must be owned by the current user or `SYSTEM` and access may be granted only to the current user, `SYSTEM` or local administrators.
 
 If you use systemd, you can place the configuration file in `/etc/xddns.yaml` and enable the service:
 

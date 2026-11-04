@@ -2,12 +2,11 @@ package config
 
 import (
 	"errors"
-	"fmt"
+	"io"
 	"io/fs"
 	"os"
 	"path/filepath"
 	"runtime"
-	"strings"
 	"time"
 
 	"github.com/goccy/go-yaml"
@@ -85,15 +84,22 @@ func LoadConfig(path string) (*Config, string, error) {
 	}
 
 	for _, candidate := range candiates {
-		err := validateConfigFilePermissions(candidate)
+		file, err := os.Open(candidate) //nolint:gosec
 		if errors.Is(err, fs.ErrNotExist) {
 			continue
 		}
 		if err != nil {
 			return nil, candidate, err
 		}
+		err = validatePlatformConfigFilePermissions(file, candidate)
+		if err != nil {
+			_ = file.Close()
 
-		cfg, err := loadConfigFromFile(candidate)
+			return nil, candidate, err
+		}
+
+		cfg, err := loadConfigFromFile(file)
+		_ = file.Close()
 		if err != nil {
 			return nil, candidate, err
 		}
@@ -115,8 +121,8 @@ func FindConfigPath() string {
 	return ""
 }
 
-func loadConfigFromFile(path string) (*Config, error) {
-	data, err := os.ReadFile(path) //nolint:gosec
+func loadConfigFromFile(file *os.File) (*Config, error) {
+	data, err := io.ReadAll(file)
 	if err != nil {
 		return nil, err
 	}
@@ -128,30 +134,6 @@ func loadConfigFromFile(path string) (*Config, error) {
 	}
 
 	return cfg, nil
-}
-
-func validateConfigFilePermissions(path string) error {
-	info, err := os.Stat(path)
-	if err != nil {
-		return err
-	}
-
-	mode := info.Mode().Perm()
-
-	if isSystemdCredential(path) {
-		// systemd credential files are set to 0440 by default.
-		if mode&0o0037 != 0 {
-			return fmt.Errorf("%w (%04o): %q. Unexpected permissions for a systemd credential file", ErrInsecureConfigFile, mode, path)
-		}
-
-		return nil
-	}
-
-	if mode&0o0077 != 0 {
-		return fmt.Errorf("%w (%04o): %q. It should be readable and writeable only by the owner (0600)", ErrInsecureConfigFile, mode, path)
-	}
-
-	return nil
 }
 
 func configPathCandidates() []string {
@@ -210,8 +192,7 @@ func configPathCandidates() []string {
 	return candidates
 }
 
-// isSystemdCredential reports whether path resides under the directory systemd exposes for LoadCredential=/SetCredential=.
-func isSystemdCredential(path string) bool {
+func isDirInSystemdCredential(path string) bool {
 	credDir := os.Getenv("CREDENTIALS_DIRECTORY")
 	if credDir == "" {
 		return false
@@ -231,7 +212,7 @@ func isSystemdCredential(path string) bool {
 		return false
 	}
 
-	return rel != "." && rel != ".." && !strings.HasPrefix(rel, ".."+string(filepath.Separator))
+	return rel != "." && filepath.IsLocal(rel)
 }
 
 func fileExists(filename string) bool {

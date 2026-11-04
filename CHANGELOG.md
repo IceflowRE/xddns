@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.3
+
+### Fixed
+
+- Validate Windows ACLs for configuration files
+
 ## 0.2.2
 
 ### Updated

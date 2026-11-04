@@ -1,6 +1,6 @@
 # Configuration
 
-XDDNS reads YAML configuration. Keep credentials out of updater names because names appear in logs and notifications. The file itself should be only read- and writeable by the owner (`0600`), other file permissions are rejected.
+XDDNS reads YAML configuration. Keep credentials out of updater names because names appear in logs and notifications. On Unix-like systems, the file itself should be only read- and writeable by the owner (`0600`), other file permissions are rejected. On Windows, the file must be owned by the current user or `SYSTEM` and its ACL may grant access only to the current user, `SYSTEM` or local administrators.
 
 ## Selecting a file
 
