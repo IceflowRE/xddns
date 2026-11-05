@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.4
+
+### Fixed
+
+- Resolve CIDR-formatted Windows interface addresses and ignore temporary IPv6 addresses
+
 ## 0.2.3
 
 ### Fixed

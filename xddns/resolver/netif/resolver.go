@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"iter"
 	"net"
+	"net/netip"
+	"runtime"
 	"slices"
 	"strings"
 
@@ -100,19 +102,28 @@ func (resol *Resolver) Resolve(ctx context.Context, protocols config.Protocols) 
 				return ips, errors.Join(append(errs, ctx.Err())...)
 			}
 
-			ipAddr, proto, isPublic := internal.IsPublicIP(addr.String())
-			if !ipAddr.IsValid() {
+			parsedAddr, err := parseInterfaceAddress(addr.String())
+			if !parsedAddr.ip.IsValid() {
 				errs = append(errs, fmt.Errorf("%w: (%q): %q", ErrInvalidIP, resol.cfg.Interface, addr.String()))
 
 				continue
 			}
+			if err != nil {
+				errs = append(errs, err)
 
-			if !missingProtos.IsSet(proto) || !isPublic {
+				continue
+			}
+			if parsedAddr.temporary {
 				continue
 			}
 
-			ips.Set(proto, ipAddr)
-			missingProtos.Set(proto, false)
+			_, _, isPublic := internal.IsPublicIP(parsedAddr.ip.String())
+			if !missingProtos.IsSet(parsedAddr.protocol) || !isPublic {
+				continue
+			}
+
+			ips.Set(parsedAddr.protocol, parsedAddr.ip)
+			missingProtos.Set(parsedAddr.protocol, false)
 
 			if missingProtos.IsEmpty() {
 				return ips, nil
@@ -121,6 +132,40 @@ func (resol *Resolver) Resolve(ctx context.Context, protocols config.Protocols) 
 	}
 
 	return ips, errors.Join(append(errs, fmt.Errorf("%w: %v", resolver.ErrNotAllProtocolsResolved, missingProtos))...)
+}
+
+type interfaceAddress struct {
+	ip        netip.Addr
+	protocol  string
+	temporary bool
+}
+
+func parseInterfaceAddress(value string) (interfaceAddress, error) {
+	value = strings.TrimSpace(value)
+	prefix, err := netip.ParsePrefix(value)
+	if err != nil {
+		ip, err := netip.ParseAddr(value)
+		if err != nil {
+			return interfaceAddress{}, err
+		}
+
+		if ip.Is4() {
+			return interfaceAddress{ip: ip, protocol: internal.IPv4}, nil
+		}
+
+		return interfaceAddress{ip: ip, protocol: internal.IPv6}, nil
+	}
+
+	ip := prefix.Addr()
+	if ip.Is4() {
+		return interfaceAddress{ip: ip, protocol: internal.IPv4}, nil
+	}
+
+	return interfaceAddress{
+		ip:        ip,
+		protocol:  internal.IPv6,
+		temporary: runtime.GOOS == "windows" && prefix.Bits() == 128,
+	}, nil
 }
 
 func iterInterfaces(names lib.StringSlice) (iter.Seq[net.Interface], error) {
