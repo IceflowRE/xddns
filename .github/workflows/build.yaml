@@ -34,7 +34,7 @@ jobs:
         run: |
           mkdir dist
           GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }} \
-          go build -v -o dist/xddns-${{ matrix.goos }}-${{ matrix.goarch }}${{ steps.vars.outputs.EXT }} ./cmd/xddns
+          go build -v -trimpath -buildvcs=true -ldflags="-s -w" -o dist/xddns-${{ matrix.goos }}-${{ matrix.goarch }}${{ steps.vars.outputs.EXT }} ./cmd/xddns
       - name: Attest
         uses: actions/attest@v4
         with:
